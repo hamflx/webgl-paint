@@ -1,5 +1,6 @@
 import { invokeCallbacks } from "./utils/callbacks"
 import { on } from "./utils/events"
+import { normalizeColor } from "./webgl/common/colors"
 import { createLineShape } from "./webgl/shapes/line"
 import { createRectShape } from "./webgl/shapes/rect"
 
@@ -10,17 +11,27 @@ export const createPaint = container => {
 
   const renderingItemList = []
 
-  let paintMode = PaintTool.Line
+  const renderingContext = {
+    gl,
+    paintMode: PaintTool.Line,
+    foregroundColor: normalizeColor('black'),
+    backgroundColor: normalizeColor('white')
+  }
+  const setPaintMode = mode => { renderingContext.paintMode = mode }
+  const setForegroundColor = color => {
+    renderingContext.foregroundColor = normalizeColor(color)
+  }
+  const setBackgroundColor = color => {
+    renderingContext.backgroundColor = normalizeColor(color)
+  }
 
-  const setPaintMode = mode => { paintMode = mode }
-
-  const getPaintMode = () => paintMode
+  const getPaintMode = () => renderingContext.paintMode
 
   const renderFrame = () => {
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     for (const item of renderingItemList) {
-      item.render(gl)
+      item.render(renderingContext)
     }
   }
 
@@ -30,12 +41,12 @@ export const createPaint = container => {
     const { offsetX: x, offsetY: y } = mouseDownEvent
 
     let item
-    switch (paintMode) {
+    switch (renderingContext.paintMode) {
       case PaintTool.Line:
-        item = createLineShape({ x1: x, y1: y, x2: x, y2: y })
+        item = createLineShape(renderingContext, { x1: x, y1: y, x2: x, y2: y })
         break
       case PaintTool.Rectangle:
-        item = createRectShape({ x1: x, y1: y, x2: x, y2: y })
+        item = createRectShape(renderingContext, { x1: x, y1: y, x2: x, y2: y })
         break
     }
 
@@ -66,7 +77,7 @@ export const createPaint = container => {
   dispose.push(on(canvas, 'mousedown', beginEvent))
 
   const destroy = () => invokeCallbacks(dispose)
-  return { getPaintMode, setPaintMode, destroy }
+  return { getPaintMode, setPaintMode, setForegroundColor, setBackgroundColor, destroy }
 }
 
 export const PaintTool = {

@@ -1,36 +1,53 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import ColorPlate from './components/ColorPlate.vue'
+import { onMounted, onUnmounted, ref, watchEffect } from 'vue'
 import { createPaint, createPaintTools } from './paint'
+import { getColorPlateColors } from './webgl/common/colors';
 
 const canvasContainer = ref(null)
 const currentPaintMode = ref(null)
 const paintTools = createPaintTools()
 
-let paint = null
+let paint = ref(null)
+
+const foregroundColor = ref(getColorPlateColors()[0])
+watchEffect(() => paint.value && paint.value.setForegroundColor(foregroundColor.value))
+const backgroundColor = ref(getColorPlateColors().slice(-1)[0])
+watchEffect(() => paint.value && paint.value.setBackgroundColor(backgroundColor.value))
 
 const setPaintMode = mode => {
-  if (paint) {
-    paint.setPaintMode(mode)
+  if (paint.value) {
+    paint.value.setPaintMode(mode)
   }
-  currentPaintMode.value = paint.getPaintMode()
+  currentPaintMode.value = paint.value.getPaintMode()
 }
 
 onMounted(() => {
-  paint = createPaint(canvasContainer.value)
-  currentPaintMode.value = paint.getPaintMode()
+  paint.value = createPaint(canvasContainer.value)
+  currentPaintMode.value = paint.value.getPaintMode()
 })
 
 onUnmounted(() => {
-  paint.destroy()
+  paint.value.destroy()
 })
 </script>
 
 <template>
   <div class="paint">
     <div class="paint__toolbar">
-      <template v-for="tool of paintTools">
-        <button class="paint__toolbar__btn" :class="{ isActive: tool.mode === currentPaintMode }" @click="setPaintMode(tool.mode)">{{ tool.name }}</button>
-      </template>
+      <div class="paint__toolbar__block">
+        <template v-for="tool of paintTools">
+          <button class="paint__toolbar__btn" :class="{ isActive: tool.mode === currentPaintMode }" @click="setPaintMode(tool.mode)">{{ tool.name }}</button>
+        </template>
+      </div>
+
+      <div class="paint__toolbar__block">
+        前景色：<ColorPlate v-model="foregroundColor"></ColorPlate>
+      </div>
+
+      <div class="paint__toolbar__block">
+        背景色：<ColorPlate v-model="backgroundColor"></ColorPlate>
+      </div>
     </div>
     <div ref="canvasContainer" class="paint__content"></div>
   </div>
@@ -44,8 +61,18 @@ onUnmounted(() => {
   flex-direction: column;
 
   &__toolbar {
+    display: flex;
+    align-items: center;
     padding: 18px 24px;
     background-color: #dedede;
+
+    &__block {
+      display: flex;
+      align-items: center;
+      &:not(:first-child) {
+        margin-left: 24px;
+      }
+    }
 
     &__btn {
       padding: 4px 12px;

@@ -2,13 +2,13 @@ import { initializeOnce } from "../../utils/hooks"
 import { createProgram } from "../common/program"
 import { createShader } from "../common/shader"
 
-export const createLineShape = ({ x1, y1, x2, y2 }) => {
-  /**
-   * @param {WebGLRenderingContext} gl
-   */
-  const render = gl => {
+export const createLineShape = (ctx, { x1, y1, x2, y2 }) => {
+  const { foregroundColor } = ctx
+
+  const render = ({ gl }) => {
     const { program, buffer, attrPos } = getProgram(gl)
     gl.useProgram(program)
+    gl.uniform4f(gl.getUniformLocation(program, 'u_color'), ...foregroundColor, 1)
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, 0, 0)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -56,9 +56,9 @@ void main() {
 }
 `
 const lineFragShaderSourceCode = `
-// uniform vec4 u_color;
 precision mediump float;
+uniform vec4 u_color;
 void main() {
-  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  gl_FragColor = u_color;
 }
 `
