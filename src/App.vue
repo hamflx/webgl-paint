@@ -17,6 +17,7 @@ const setPaintMode = mode => {
 
 onMounted(() => {
   paint = createPaint(canvasContainer.value)
+  currentPaintMode.value = paint.getPaintMode()
 })
 
 onUnmounted(() => {
