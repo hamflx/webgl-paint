@@ -1,6 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-import { createPaint, createPaintTools, PaintTool } from './paint'
+import { onMounted, onUnmounted, ref } from 'vue'
+import { createPaint, createPaintTools } from './paint'
 
 const canvasContainer = ref(null)
 const currentPaintMode = ref(null)
@@ -17,6 +17,10 @@ const setPaintMode = mode => {
 
 onMounted(() => {
   paint = createPaint(canvasContainer.value)
+})
+
+onUnmounted(() => {
+  paint.destroy()
 })
 </script>
 

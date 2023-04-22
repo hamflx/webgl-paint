@@ -1,3 +1,5 @@
+import { invokeCallbacks } from "./callbacks"
+
 export const createEventEmitter = () => {
   const events = new Map()
   const on = (event, handler) => {
@@ -17,6 +19,16 @@ export const createEventEmitter = () => {
 }
 
 export const on = (element, event, handler) => {
-  element.addEventListener(event, handler)
-  return () => element.removeEventListener(event, handler)
+  const dispose = []
+  const handlerWrapper = (...args) => {
+    const result = handler(...args)
+    if (typeof result === 'function') {
+      dispose.push(result)
+    }
+  }
+  element.addEventListener(event, handlerWrapper)
+  return () => {
+    element.removeEventListener(event, handlerWrapper)
+    invokeCallbacks(dispose)
+  }
 }
