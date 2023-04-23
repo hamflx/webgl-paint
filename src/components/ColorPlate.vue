@@ -1,5 +1,5 @@
 <script setup>
-import { ref, toRefs, defineProps } from 'vue'
+import { toRefs, defineProps } from 'vue'
 import { getColorPlateColors } from '../webgl/common/colors'
 
 const props = defineProps({
@@ -11,7 +11,6 @@ const { modelValue } = toRefs(props)
 const colorList = getColorPlateColors()
 
 const setActiveColor = color => {
-  console.log('color', color)
   emit('update:modelValue', color)
 }
 </script>
