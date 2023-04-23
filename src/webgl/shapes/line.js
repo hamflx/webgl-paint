@@ -3,8 +3,7 @@ import { createProgram } from "../common/program"
 import { createShader } from "../common/shader"
 
 export const createLineShape = (ctx, { x1, y1, x2, y2 }) => {
-  const { foregroundColor } = ctx
-  const { thickness } = ctx
+  const { foregroundColor, thickness } = ctx
 
   const render = ({ gl }) => {
     const { program, buffer, attrPos, attrNextPos, attrDir } = getProgram(gl)
