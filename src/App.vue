@@ -23,28 +23,35 @@ onUnmounted(() => {
 
 <template>
   <div class="paint">
-    <div class="paint__toolbar">
-      <div class="paint__toolbar__block">
-        <template v-for="tool of paintTools">
-          <button class="paint__toolbar__btn" :class="{ isActive: tool.mode === paintState.paintMode }" @click="paintState.paintMode = tool.mode">{{ tool.name }}</button>
-        </template>
+    <div class="paint__heading">
+      <div class="paint__heading__row">
+        <span class="paint__heading__title">WebGL 画图</span>
+        <span class="paint__heading__meta">仓库地址：<a href="https://github.com/hamflx/webgl-paint">https://github.com/hamflx/webgl-paint</a></span>
       </div>
 
-      <div class="paint__toolbar__block">
-        线宽：<ThicknessPlate v-model="paintState.thickness"/>
-      </div>
+      <div class="paint__toolbar paint__heading__row">
+        <div class="paint__toolbar__block">
+          <template v-for="tool of paintTools">
+            <button class="paint__toolbar__btn" :class="{ isActive: tool.mode === paintState.paintMode }" @click="paintState.paintMode = tool.mode">{{ tool.name }}</button>
+          </template>
+        </div>
 
-      <div class="paint__toolbar__block">
-        前景色：<ColorPlate v-model="paintState.foregroundColor"></ColorPlate>
-      </div>
+        <div class="paint__toolbar__block">
+          线宽：<ThicknessPlate v-model="paintState.thickness"/>
+        </div>
 
-      <div class="paint__toolbar__block">
-        背景色：<ColorPlate v-model="paintState.backgroundColor"></ColorPlate>
-      </div>
+        <div class="paint__toolbar__block">
+          前景色：<ColorPlate v-model="paintState.foregroundColor"></ColorPlate>
+        </div>
 
-      <div class="paint__toolbar__block">
-        <button class="paint__toolbar__btn" @click="paint.undo()">撤销（Ctrl-Z）</button>
-        <button class="paint__toolbar__btn" @click="paint.redo()">重做（Ctrl-Y）</button>
+        <div class="paint__toolbar__block">
+          背景色：<ColorPlate v-model="paintState.backgroundColor"></ColorPlate>
+        </div>
+
+        <div class="paint__toolbar__block">
+          <button class="paint__toolbar__btn" @click="paint.undo()">撤销（Ctrl-Z）</button>
+          <button class="paint__toolbar__btn" @click="paint.redo()">重做（Ctrl-Y）</button>
+        </div>
       </div>
     </div>
     <div ref="canvasContainer" class="paint__content"></div>
@@ -58,11 +65,26 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
 
+  &__heading {
+    background-color: #dedede;
+
+    &__row {
+      margin: 12px 24px;
+    }
+
+    &__title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    &__meta {
+      margin-left: 12px;
+    }
+  }
+
   &__toolbar {
     display: flex;
     align-items: center;
-    padding: 18px 24px;
-    background-color: #dedede;
 
     &__block {
       display: flex;
