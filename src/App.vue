@@ -1,5 +1,6 @@
 <script setup>
 import ColorPlate from './components/ColorPlate.vue'
+import ThicknessPlate from './components/ThicknessPlate.vue'
 import { onMounted, onUnmounted, ref } from 'vue'
 import { createPaint, createPaintTools } from './paint'
 import { createPaintReactiveState } from './reactive'
@@ -27,6 +28,10 @@ onUnmounted(() => {
         <template v-for="tool of paintTools">
           <button class="paint__toolbar__btn" :class="{ isActive: tool.mode === paintState.paintMode }" @click="paintState.paintMode = tool.mode">{{ tool.name }}</button>
         </template>
+      </div>
+
+      <div class="paint__toolbar__block">
+        线宽：<ThicknessPlate v-model="paintState.thickness"/>
       </div>
 
       <div class="paint__toolbar__block">

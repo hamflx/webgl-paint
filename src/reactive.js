@@ -1,7 +1,7 @@
 import { reactive, ref, watchEffect } from 'vue'
 
 export const createPaintReactiveState = () => {
-  const properties = ['foregroundColor', 'backgroundColor', 'paintMode']
+  const properties = ['foregroundColor', 'backgroundColor', 'paintMode', 'thickness']
   const paintInst = ref(null)
   const paintState = reactive(properties.reduce(
     (map, prop) => ({ ...map, [prop]: null }),

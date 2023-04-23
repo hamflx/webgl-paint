@@ -13,6 +13,7 @@ export const createPaint = container => {
 
   const renderingContext = {
     gl,
+    thickness: 2,
     paintMode: PaintTool.Line,
     foregroundColor: getColorPlateColors()[0],
     backgroundColor: getColorPlateColors().slice(-1)[0]
@@ -23,6 +24,8 @@ export const createPaint = container => {
   const getPaintMode = () => renderingContext.paintMode
   const getForegroundColor = () => renderingContext.foregroundColor
   const getBackgroundColor = () => renderingContext.backgroundColor
+  const setThickness = mode => { renderingContext.thickness = mode }
+  const getThickness = () => renderingContext.thickness
 
   const renderFrame = () => {
     const ctx = getNormalizedRenderingContext(renderingContext)
@@ -76,7 +79,7 @@ export const createPaint = container => {
   dispose.push(on(canvas, 'mousedown', beginEvent))
 
   const destroy = () => invokeCallbacks(dispose)
-  return { getPaintMode, setPaintMode, setForegroundColor, setBackgroundColor, getForegroundColor, getBackgroundColor, destroy }
+  return { getPaintMode, setPaintMode, setForegroundColor, setBackgroundColor, getForegroundColor, getBackgroundColor, setThickness, getThickness, destroy }
 }
 
 export const PaintTool = {
