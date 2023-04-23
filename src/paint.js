@@ -9,7 +9,12 @@ export const createPaint = container => {
   const canvas = createCanvas(container)
   const gl = prepareWebgl(canvas)
 
+  canvas.tabIndex = 0
+  canvas.style.outline = 'none'
+
   const renderingItemList = []
+  const undoStack = []
+  const redoStack = []
 
   const renderingContext = {
     gl,
@@ -56,6 +61,8 @@ export const createPaint = container => {
       return
     }
 
+    undoStack.push([...renderingItemList])
+    redoStack.length = 0
     renderingItemList.push(item)
     requestRender()
 
@@ -78,8 +85,44 @@ export const createPaint = container => {
   }
   dispose.push(on(canvas, 'mousedown', beginEvent))
 
+  const onKeydown = keydownEvent => {
+    if (keydownEvent.code === 'KeyZ' && keydownEvent.ctrlKey) {
+      undo()
+    }
+    if (keydownEvent.code === 'KeyY' && keydownEvent.ctrlKey) {
+      redo()
+    }
+  }
+  dispose.push(on(canvas, 'keydown', onKeydown))
+
+  const undo = () => {
+    const stackItem = undoStack.pop()
+    if (stackItem) {
+      redoStack.push([...renderingItemList])
+      renderingItemList.length = 0
+
+      for (const item of stackItem) {
+        renderingItemList.push(item)
+      }
+      requestRender()
+    }
+  }
+
+  const redo = () => {
+    const stackItem = redoStack.pop()
+    if (stackItem) {
+      undoStack.push([...renderingItemList])
+      renderingItemList.length = 0
+
+      for (const item of stackItem) {
+        renderingItemList.push(item)
+      }
+      requestRender()
+    }
+  }
+
   const destroy = () => invokeCallbacks(dispose)
-  return { getPaintMode, setPaintMode, setForegroundColor, setBackgroundColor, getForegroundColor, getBackgroundColor, setThickness, getThickness, destroy }
+  return { getPaintMode, setPaintMode, setForegroundColor, setBackgroundColor, getForegroundColor, getBackgroundColor, setThickness, getThickness, undo, redo, destroy }
 }
 
 export const PaintTool = {

@@ -41,6 +41,11 @@ onUnmounted(() => {
       <div class="paint__toolbar__block">
         背景色：<ColorPlate v-model="paintState.backgroundColor"></ColorPlate>
       </div>
+
+      <div class="paint__toolbar__block">
+        <button class="paint__toolbar__btn" @click="paint.undo()">撤销（Ctrl-Z）</button>
+        <button class="paint__toolbar__btn" @click="paint.redo()">重做（Ctrl-Y）</button>
+      </div>
     </div>
     <div ref="canvasContainer" class="paint__content"></div>
   </div>
