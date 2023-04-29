@@ -12,5 +12,6 @@ export const normalizeColor = color => {
   el.style.color = color
   document.body.appendChild(el)
   const match = getComputedStyle(el).color.match(/rgb\((\d+), (\d+), (\d+)\)/)
+  el.remove()
   return [match[1] / 255, match[2] / 255, match[3] / 255]
 }
