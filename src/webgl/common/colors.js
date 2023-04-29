@@ -8,10 +8,17 @@ export const getColorPlateColors = () => Array.from({ length: 12 }).map((_, i) =
  * @returns {[number, number, number]}
  */
 export const normalizeColor = color => {
+  if (cachedNormalizedColor.has(color)) {
+    return cachedNormalizedColor.get(color)
+  }
   const el = document.createElement('div')
   el.style.color = color
   document.body.appendChild(el)
   const match = getComputedStyle(el).color.match(/rgb\((\d+), (\d+), (\d+)\)/)
   el.remove()
-  return [match[1] / 255, match[2] / 255, match[3] / 255]
+  const normalizedColor = [match[1] / 255, match[2] / 255, match[3] / 255]
+  cachedNormalizedColor.set(color, normalizedColor)
+  return normalizedColor
 }
+
+const cachedNormalizedColor = new Map()
