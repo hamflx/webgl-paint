@@ -60,6 +60,11 @@ const setActiveThickness = thickness => {
       height: 5px;
     }
 
+    &:hover {
+      outline: 2px solid rgb(238, 238, 238);
+      z-index: 2;
+    }
+
     &.isActive {
       z-index: 1;
       outline: 2px solid rgb(255, 0, 128);
