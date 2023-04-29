@@ -1,6 +1,7 @@
 import { invokeCallbacks } from "./utils/callbacks"
 import { on } from "./utils/events"
 import { getColorPlateColors, normalizeColor } from "./webgl/common/colors"
+import { createBrushShape } from "./webgl/shapes/brush"
 import { createLineShape } from "./webgl/shapes/line"
 import { createRectShape } from "./webgl/shapes/rect"
 
@@ -54,6 +55,9 @@ export const createPaint = container => {
         break
       case PaintTool.Rectangle:
         item = createRectShape(ctx, { x1: x, y1: y, x2: x, y2: y })
+        break
+      case PaintTool.Brush:
+        item = createBrushShape(ctx, { x, y })
         break
     }
 
@@ -138,7 +142,8 @@ export const PaintTool = {
 export const createPaintTools = () => {
   return [
     { name: '直线', mode: PaintTool.Line },
-    { name: '矩形', mode: PaintTool.Rectangle }
+    { name: '矩形', mode: PaintTool.Rectangle },
+    { name: '刷子', mode: PaintTool.Brush },
   ]
 }
 
@@ -149,8 +154,6 @@ const getNormalizedRenderingContext = ctx => {
     backgroundColor: normalizeColor(ctx.backgroundColor)
   }
 }
-
-const createToolbar = () => {}
 
 const createCanvas = container => {
   const canvas = document.createElement('canvas')
@@ -169,9 +172,4 @@ const createCanvas = container => {
  */
 const prepareWebgl = canvas => {
   return canvas.getContext('webgl')
-}
-
-const createRect = () => {
-  const render = () => {}
-  return { render }
 }
