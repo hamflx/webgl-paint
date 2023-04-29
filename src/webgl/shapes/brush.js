@@ -106,7 +106,11 @@ void main() {
   vec2 unit_a = normalize(vec_a);
   vec2 vec_b = a_next_pos - a_pos;
   vec2 unit_b = normalize(vec_b);
-  float w = a_dir * inversesqrt((1.0 + dot(vec_a, vec_b) / (length(vec_a) * length(vec_b))) / 2.0);
+  float w = a_dir;
+  float cos_theta = dot(vec_a, vec_b) / (length(vec_a) * length(vec_b));
+  if (cos_theta < -1.0) {
+    w = a_dir * inversesqrt((1.0 + cos_theta) / 2.0);
+  }
   vec2 dir_unit = normalize((unit_a + unit_b) * mat2(0, -1, 1, 0));
   vec2 norm = dir_unit * w;
   vec2 final_pos = a_pos + norm;
