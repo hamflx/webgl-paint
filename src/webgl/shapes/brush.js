@@ -14,9 +14,9 @@ export const createBrushShape = (ctx, { x, y }) => {
       return
     }
 
-    const { program, buffer, attrPos, attrPrevPos, attrNextPos, attrDir } = getProgram(gl)
+    const { program, buffer, attrPos, attrPrevPos, attrNextPos, attrDir, uniformColor } = getProgram(gl)
     gl.useProgram(program)
-    gl.uniform4f(gl.getUniformLocation(program, 'u_color'), ...foregroundColor, 1)
+    gl.uniform4f(uniformColor, ...foregroundColor, 1)
 
     const unitSize = 7
     const unitBytes = unitSize * 4
@@ -73,6 +73,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
   const attrPrevPos = gl.getAttribLocation(program, 'a_prev_pos')
   const attrNextPos = gl.getAttribLocation(program, 'a_next_pos')
   const attrDir = gl.getAttribLocation(program, 'a_dir')
+  const uniformColor = gl.getUniformLocation(program, 'u_color')
 
   gl.useProgram(program)
 
@@ -87,7 +88,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
 
-  return { program, buffer, attrPos, attrPrevPos, attrNextPos, attrDir }
+  return { program, buffer, attrPos, attrPrevPos, attrNextPos, attrDir, uniformColor }
 })
 
 const lineVertexShaderSourceCode = `

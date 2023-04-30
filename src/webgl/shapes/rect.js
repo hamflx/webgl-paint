@@ -10,11 +10,11 @@ export const createRectShape = (ctx, { x1, y1, x2, y2 }) => {
    * @param {{ gl: WebGLRenderingContext }} param0
    */
   const render = ({ gl }) => {
-    const { program, buffer, attrPos } = getProgram(gl)
+    const { program, buffer, attrPos, uniformColor } = getProgram(gl)
     const xDir = Math.sign(x2 - x1)
     const yDir = Math.sign(y2 - y1)
     gl.useProgram(program)
-    gl.uniform4f(gl.getUniformLocation(program, 'u_color'), ...backgroundColor, 1)
+    gl.uniform4f(uniformColor, ...backgroundColor, 1)
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
       x1, y1, x1 + thickness * xDir, y1 + thickness * yDir,
@@ -24,12 +24,12 @@ export const createRectShape = (ctx, { x1, y1, x2, y2 }) => {
     ]), gl.STATIC_DRAW)
 
     gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, 16, 0)
-    gl.uniform4f(gl.getUniformLocation(program, 'u_color'), ...foregroundColor, 1)
+    gl.uniform4f(uniformColor, ...foregroundColor, 1)
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4)
 
     if (Math.abs(x2 - x1) > thickness * 2 && Math.abs(y2 - y1) > thickness * 2) {
       gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, 16, 8)
-      gl.uniform4f(gl.getUniformLocation(program, 'u_color'), ...backgroundColor, 1)
+      gl.uniform4f(uniformColor, ...backgroundColor, 1)
       gl.drawArrays(gl.TRIANGLE_FAN, 0, 4)
     }
   }
@@ -50,6 +50,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
   )
   const buffer = gl.createBuffer()
   const attrPos = gl.getAttribLocation(program, 'a_pos')
+  const uniformColor = gl.getUniformLocation(program, 'u_color')
 
   gl.useProgram(program)
   
@@ -60,7 +61,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
   gl.enableVertexAttribArray(attrPos)
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
 
-  return { program, buffer, attrPos }
+  return { program, buffer, attrPos, uniformColor }
 })
 
 const lineVertexShaderSourceCode = `

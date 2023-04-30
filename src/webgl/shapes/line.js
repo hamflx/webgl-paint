@@ -6,9 +6,9 @@ export const createLineShape = (ctx, { x1, y1, x2, y2 }) => {
   const { foregroundColor, thickness } = ctx
 
   const render = ({ gl }) => {
-    const { program, buffer, attrPos, attrNextPos, attrDir } = getProgram(gl)
+    const { program, buffer, attrPos, attrNextPos, attrDir, uniformColor } = getProgram(gl)
     gl.useProgram(program)
-    gl.uniform4f(gl.getUniformLocation(program, 'u_color'), ...foregroundColor, 1)
+    gl.uniform4f(uniformColor, ...foregroundColor, 1)
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, 20, 0)
     gl.vertexAttribPointer(attrNextPos, 2, gl.FLOAT, false, 20, 8)
@@ -40,6 +40,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
   const attrPos = gl.getAttribLocation(program, 'a_pos')
   const attrNextPos = gl.getAttribLocation(program, 'a_next_pos')
   const attrDir = gl.getAttribLocation(program, 'a_dir')
+  const uniformColor = gl.getUniformLocation(program, 'u_color')
 
   gl.useProgram(program)
 
@@ -53,7 +54,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
 
-  return { program, buffer, attrPos, attrNextPos, attrDir }
+  return { program, buffer, attrPos, attrNextPos, attrDir, uniformColor }
 })
 
 const lineVertexShaderSourceCode = `
