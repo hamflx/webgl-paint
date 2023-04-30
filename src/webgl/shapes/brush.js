@@ -108,7 +108,7 @@ void main() {
   vec2 unit_b = normalize(vec_b);
   float w = a_dir;
   float cos_theta = dot(vec_a, vec_b) / (length(vec_a) * length(vec_b));
-  if (cos_theta < -1.0) {
+  if (cos_theta > -0.999) {
     w = a_dir * inversesqrt((1.0 + cos_theta) / 2.0);
   }
   vec2 dir_unit = normalize((unit_a + unit_b) * mat2(0, -1, 1, 0));
