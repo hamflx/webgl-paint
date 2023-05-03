@@ -147,7 +147,7 @@ void main() {
     w = a_dir * inversesqrt((1.0 + cos_theta) / 2.0);
   }
   vec2 dir_unit = normalize((unit_a + unit_b) * mat2(0, -1, 1, 0));
-  vec2 norm = dir_unit * w;
+  vec2 norm = dir_unit * w / 2.0;
   vec2 final_pos = a_pos + norm;
   vec2 transform_pos = transform_coord2(final_pos);
   gl_Position = vec4(transform_pos.xy, 1, 1);
