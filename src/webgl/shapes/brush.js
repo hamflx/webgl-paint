@@ -18,16 +18,16 @@ export const createBrushTool = gl => {
 
     gl.useProgram(program)
 
+    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+
     gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, unitBytes, 0)
     gl.vertexAttribPointer(attrPrevPos, 2, gl.FLOAT, false, unitBytes, 8)
     gl.vertexAttribPointer(attrNextPos, 2, gl.FLOAT, false, unitBytes, 16)
     gl.vertexAttribPointer(attrDir, 1, gl.FLOAT, false, unitBytes, 24)
     gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 28)
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
   }
   return { draw }

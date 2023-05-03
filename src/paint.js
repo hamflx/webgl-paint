@@ -49,11 +49,13 @@ export const createPaint = container => {
       const { count } = prepare(vertices, indices, offset)
       offset += count
     }
-    brushTool.draw(vertices, indices)
+    if (indices.length) {
+      brushTool.draw(vertices, indices)
+    }
 
-    for (const item of renderingItemList) {
-      if (item.render === 'function') {
-        item.render(ctx)
+    for (const { render } of renderingItemList) {
+      if (typeof render === 'function') {
+        render(ctx)
       }
     }
   }
