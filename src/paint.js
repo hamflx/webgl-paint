@@ -1,7 +1,8 @@
 import { invokeCallbacks } from "./utils/callbacks"
 import { on } from "./utils/events"
 import { getColorPlateColors, normalizeColor } from "./webgl/common/colors"
-import { createBrushShape } from "./webgl/shapes/brush"
+import { PaintTool } from "./webgl/common/tools"
+import { createBrushShape, createBrushTool } from "./webgl/shapes/brush"
 import { createLineShape } from "./webgl/shapes/line"
 import { createRectShape } from "./webgl/shapes/rect"
 
@@ -9,6 +10,8 @@ export const createPaint = container => {
   const dispose = []
   const canvas = createCanvas(container)
   const gl = prepareWebgl(canvas)
+
+  const brushTool = createBrushTool(gl)
 
   canvas.tabIndex = 0
   canvas.style.outline = 'none'
@@ -37,8 +40,21 @@ export const createPaint = container => {
     const ctx = getNormalizedRenderingContext(renderingContext)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
+
+    const brushesShape = renderingItemList.filter(item => item.type === PaintTool.Brush)
+    let offset = 0
+    const vertices = []
+    const indices = []
+    for (const { prepare } of brushesShape) {
+      const { count } = prepare(vertices, indices, offset)
+      offset += count
+    }
+    brushTool.draw(vertices, indices)
+
     for (const item of renderingItemList) {
-      item.render(ctx)
+      if (item.render === 'function') {
+        item.render(ctx)
+      }
     }
   }
 
@@ -127,16 +143,6 @@ export const createPaint = container => {
 
   const destroy = () => invokeCallbacks(dispose)
   return { getPaintMode, setPaintMode, setForegroundColor, setBackgroundColor, getForegroundColor, getBackgroundColor, setThickness, getThickness, undo, redo, destroy }
-}
-
-export const PaintTool = {
-  Pencil: 'pencil',
-  Brush: 'brush',
-  Eraser: 'eraser',
-  Line: 'line',
-  Rectangle: 'rectangle',
-  Circle: 'circle',
-  Text: 'text',
 }
 
 export const createPaintTools = () => {

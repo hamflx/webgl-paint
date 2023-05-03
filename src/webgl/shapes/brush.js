@@ -1,55 +1,41 @@
 import { initializeOnce } from "../../utils/hooks"
 import { createProgram } from "../common/program"
 import { createShader } from "../common/shader"
+import { PaintTool } from "../common/tools"
 
-export const createBrushShape = (ctx, { x, y }) => {
-  const { foregroundColor, thickness } = ctx
-  const pointList = [{ x, y }]
+/**
+ * @param {WebGLRenderingContext} gl
+ */
+export const createBrushTool = gl => {
+  const verticesBuffer = gl.createBuffer()
+  const indicesBuffer = gl.createBuffer()
 
-  /**
-   * @param {{gl: WebGLRenderingContext}} gl
-   */
-  const render = ({ gl }) => {
-    if (pointList.length < 2) {
-      return
-    }
+  const unitSize = 10
+  const unitBytes = unitSize * 4
 
-    const { program, buffer, attrPos, attrPrevPos, attrNextPos, attrDir, uniformColor } = getProgram(gl)
+  const draw = (vertices, indices) => {
+    const { program, attrPos, attrPrevPos, attrNextPos, attrDir, attrColor } = getProgram(gl)
+
     gl.useProgram(program)
-    gl.uniform4f(uniformColor, ...foregroundColor, 1)
 
-    const unitSize = 7
-    const unitBytes = unitSize * 4
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
     gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, unitBytes, 0)
     gl.vertexAttribPointer(attrPrevPos, 2, gl.FLOAT, false, unitBytes, 8)
     gl.vertexAttribPointer(attrNextPos, 2, gl.FLOAT, false, unitBytes, 16)
     gl.vertexAttribPointer(attrDir, 1, gl.FLOAT, false, unitBytes, 24)
+    gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 28)
 
-    const itemSize = unitSize * 2
-    const data = new Float32Array(pointList.length * itemSize)
-    for (let i = 0; i < pointList.length; i++) {
-      const curr = pointList[i]
-      const prev = pointList[i - 1] ?? { x: curr.x - (pointList[i + 1].x - curr.x), y: curr.y - (pointList[i + 1].y - curr.y) }
-      const next = pointList[i + 1] ?? { x: curr.x - (pointList[i - 1].x - curr.x), y: curr.y - (pointList[i - 1].y - curr.y) }
-      data[i * itemSize + 0] = curr.x
-      data[i * itemSize + 1] = curr.y
-      data[i * itemSize + 2] = prev.x
-      data[i * itemSize + 3] = prev.y
-      data[i * itemSize + 4] = next.x
-      data[i * itemSize + 5] = next.y
-      data[i * itemSize + 6] = thickness
-      data[i * itemSize + 7] = curr.x
-      data[i * itemSize + 8] = curr.y
-      data[i * itemSize + 9] = prev.x
-      data[i * itemSize + 10] = prev.y
-      data[i * itemSize + 11] = next.x
-      data[i * itemSize + 12] = next.y
-      data[i * itemSize + 13] = thickness * -1
-    }
-    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, pointList.length * 2)
+    gl.bindBuffer(gl.ARRAY_BUFFER, verticesBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
   }
+  return { draw }
+}
+
+export const createBrushShape = (ctx, { x, y }) => {
+  const { foregroundColor, thickness } = ctx
+  const pointList = [{ x, y }]
 
   const updateEndPoint = ({ x, y }) => {
     const last = pointList[pointList.length - 1]
@@ -59,7 +45,53 @@ export const createBrushShape = (ctx, { x, y }) => {
     pointList.push({ x, y })
   }
 
-  return { render, updateEndPoint }
+  /**
+   * @param {Array<number>} vertices
+   * @param {Array<number>} indices
+   * @param {number} offset
+   */
+  const prepare = (vertices, indices, offset) => {
+    let count = 0
+    if (pointList.length >= 2) {
+      for (let i = 0; i < pointList.length; i++) {
+        const curr = pointList[i]
+        const prev = pointList[i - 1] ?? { x: curr.x - (pointList[i + 1].x - curr.x), y: curr.y - (pointList[i + 1].y - curr.y) }
+        const next = pointList[i + 1] ?? { x: curr.x - (pointList[i - 1].x - curr.x), y: curr.y - (pointList[i - 1].y - curr.y) }
+        vertices.push(
+          curr.x,
+          curr.y,
+          prev.x,
+          prev.y,
+          next.x,
+          next.y,
+          thickness,
+          ...foregroundColor,
+          curr.x,
+          curr.y,
+          prev.x,
+          prev.y,
+          next.x,
+          next.y,
+          thickness * -1,
+          ...foregroundColor
+        )
+        if (i > 0) {
+          indices.push(
+            offset + i * 2 - 2,
+            offset + i * 2 - 1,
+            offset + i * 2,
+            offset + i * 2 - 1,
+            offset + i * 2,
+            offset + i * 2 + 1
+          )
+        }
+        count += 2
+      }
+    }
+    return { count }
+  }
+
+  return { type: PaintTool.Brush, prepare, updateEndPoint }
 }
 
 const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
@@ -68,12 +100,11 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
     createShader(gl, lineVertexShaderSourceCode, gl.VERTEX_SHADER),
     createShader(gl, lineFragShaderSourceCode, gl.FRAGMENT_SHADER)
   )
-  const buffer = gl.createBuffer()
   const attrPos = gl.getAttribLocation(program, 'a_pos')
   const attrPrevPos = gl.getAttribLocation(program, 'a_prev_pos')
   const attrNextPos = gl.getAttribLocation(program, 'a_next_pos')
   const attrDir = gl.getAttribLocation(program, 'a_dir')
-  const uniformColor = gl.getUniformLocation(program, 'u_color')
+  const attrColor = gl.getAttribLocation(program, 'a_color')
 
   gl.useProgram(program)
 
@@ -85,10 +116,9 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
   gl.enableVertexAttribArray(attrPrevPos)
   gl.enableVertexAttribArray(attrNextPos)
   gl.enableVertexAttribArray(attrDir)
+  gl.enableVertexAttribArray(attrColor)
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-
-  return { program, buffer, attrPos, attrPrevPos, attrNextPos, attrDir, uniformColor }
+  return { program, attrPos, attrPrevPos, attrNextPos, attrDir, attrColor }
 })
 
 const lineVertexShaderSourceCode = `
@@ -96,6 +126,8 @@ attribute vec2 a_pos;
 attribute vec2 a_prev_pos;
 attribute vec2 a_next_pos;
 attribute float a_dir;
+attribute vec4 a_color;
+varying vec4 v_color;
 uniform vec2 u_scale;
 
 vec2 transform_coord2(vec2 coord) {
@@ -103,6 +135,8 @@ vec2 transform_coord2(vec2 coord) {
 }
 
 void main() {
+  v_color = a_color;
+
   vec2 vec_a = a_pos - a_prev_pos;
   vec2 unit_a = normalize(vec_a);
   vec2 vec_b = a_next_pos - a_pos;
@@ -121,8 +155,8 @@ void main() {
 `
 const lineFragShaderSourceCode = `
 precision mediump float;
-uniform vec4 u_color;
+varying vec4 v_color;
 void main() {
-  gl_FragColor = u_color;
+  gl_FragColor = v_color;
 }
 `
