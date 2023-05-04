@@ -48,7 +48,6 @@ export const createRectShape = (ctx, { x1, y1, x2, y2 }) => {
    * @param {number} zIndex
    */
     const prepare = (vertices, indices, offset, zIndex) => {
-      console.log(zIndex)
       vertices.push(
         x1, y1, zIndex, x2, y2, thickness, ...backgroundColor,
         x1, y2, zIndex, x2, y1, thickness, ...backgroundColor,
@@ -60,10 +59,10 @@ export const createRectShape = (ctx, { x1, y1, x2, y2 }) => {
         x2, y1, zIndex, x2, y1, 0, ...foregroundColor,
       )
       indices.push(
-        offset + 4, offset + 5, offset + 6,
-        offset + 4, offset + 6, offset + 7,
         offset, offset + 1, offset + 2,
         offset, offset + 2, offset + 3,
+        offset + 4, offset + 5, offset + 6,
+        offset + 4, offset + 6, offset + 7,
       )
       return { count: 8 }
     }
