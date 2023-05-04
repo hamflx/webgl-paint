@@ -12,9 +12,6 @@ export const createPaint = container => {
   const gl = prepareWebgl(canvas)
   const tools = [createBrushTool(gl), createLineTool(gl), createRectTool(gl)]
 
-  canvas.tabIndex = 0
-  canvas.style.outline = 'none'
-
   const renderingItemList = []
   const undoStack = []
   const redoStack = []
@@ -56,7 +53,11 @@ export const createPaint = container => {
     }
   }
 
-  const requestRender = () => requestAnimationFrame(renderFrame)
+  let handle = 0
+  const requestRender = () => {
+    cancelAnimationFrame(handle)
+    handle = requestAnimationFrame(renderFrame)
+  }
 
   const beginEvent = mouseDownEvent => {
     const { offsetX: x, offsetY: y } = mouseDownEvent
@@ -166,6 +167,8 @@ const createCanvas = container => {
   canvas.style.display = 'block'
   canvas.style.width = container.offsetWidth + 'px'
   canvas.style.height = container.offsetHeight + 'px'
+  canvas.style.outline = 'none'
+  canvas.tabIndex = 0
   container.appendChild(canvas)
   return canvas
 }
