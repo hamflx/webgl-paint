@@ -1,4 +1,5 @@
 import { initializeOnce } from "../../utils/hooks"
+import { COLOR_SIZE } from "../common/colors"
 import { createProgram } from "../common/program"
 import { createShader } from "../common/shader"
 import { PaintTool } from "../common/tools"
@@ -10,8 +11,8 @@ export const createLineTool = gl => {
   const verticesBuffer = gl.createBuffer()
   const indicesBuffer = gl.createBuffer()
 
-  const unitSize = 5
-  const unitBytes = (unitSize + 3) * 4
+  const unitSize = 5 + COLOR_SIZE
+  const unitBytes = unitSize * 4
 
   const draw = (vertices, indices) => {
     const { program, attrPos, attrNextPos, attrDir, attrColor } = getProgram(gl)
@@ -68,7 +69,6 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
     createShader(gl, lineVertexShaderSourceCode, gl.VERTEX_SHADER),
     createShader(gl, lineFragShaderSourceCode, gl.FRAGMENT_SHADER)
   )
-  const buffer = gl.createBuffer()
   const attrPos = gl.getAttribLocation(program, 'a_pos')
   const attrNextPos = gl.getAttribLocation(program, 'a_next_pos')
   const attrDir = gl.getAttribLocation(program, 'a_dir')
@@ -85,9 +85,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
   gl.enableVertexAttribArray(attrDir)
   gl.enableVertexAttribArray(attrColor)
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-
-  return { program, buffer, attrPos, attrNextPos, attrDir, attrColor }
+  return { program, attrPos, attrNextPos, attrDir, attrColor }
 })
 
 const lineVertexShaderSourceCode = `

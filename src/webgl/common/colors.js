@@ -21,4 +21,6 @@ export const normalizeColor = color => {
   return normalizedColor
 }
 
+export const COLOR_SIZE = 3
+
 const cachedNormalizedColor = new Map()

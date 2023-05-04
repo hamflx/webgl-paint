@@ -1,4 +1,5 @@
 import { initializeOnce } from "../../utils/hooks"
+import { COLOR_SIZE } from "../common/colors"
 import { createProgram } from "../common/program"
 import { createShader } from "../common/shader"
 import { PaintTool } from "../common/tools"
@@ -10,7 +11,7 @@ export const createBrushTool = gl => {
   const verticesBuffer = gl.createBuffer()
   const indicesBuffer = gl.createBuffer()
 
-  const unitSize = 10
+  const unitSize = 7 + COLOR_SIZE
   const unitBytes = unitSize * 4
 
   const draw = (vertices, indices) => {

@@ -4,15 +4,13 @@ import { getColorPlateColors, normalizeColor } from "./webgl/common/colors"
 import { PaintTool } from "./webgl/common/tools"
 import { createBrushShape, createBrushTool } from "./webgl/shapes/brush"
 import { createLineShape, createLineTool } from "./webgl/shapes/line"
-import { createRectShape } from "./webgl/shapes/rect"
+import { createRectShape, createRectTool } from "./webgl/shapes/rect"
 
 export const createPaint = container => {
   const dispose = []
   const canvas = createCanvas(container)
   const gl = prepareWebgl(canvas)
-
-  const brushTool = createBrushTool(gl)
-  const lineTool = createLineTool(gl)
+  const tools = [createBrushTool(gl), createLineTool(gl), createRectTool(gl)]
 
   canvas.tabIndex = 0
   canvas.style.outline = 'none'
@@ -38,11 +36,9 @@ export const createPaint = container => {
   const getThickness = () => renderingContext.thickness
 
   const renderFrame = () => {
-    const ctx = getNormalizedRenderingContext(renderingContext)
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-    const tools = [brushTool, lineTool]
     for (const tool of tools) {
       const shapes = renderingItemList.filter(item => item.type === tool.type)
       let offset = 0
@@ -54,12 +50,6 @@ export const createPaint = container => {
       }
       if (indices.length) {
         tool.draw(vertices, indices)
-      }
-    }
-
-    for (const { render } of renderingItemList) {
-      if (typeof render === 'function') {
-        render(ctx)
       }
     }
   }
