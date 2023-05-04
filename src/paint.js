@@ -3,7 +3,7 @@ import { on } from "./utils/events"
 import { getColorPlateColors, normalizeColor } from "./webgl/common/colors"
 import { PaintTool } from "./webgl/common/tools"
 import { createBrushShape, createBrushTool } from "./webgl/shapes/brush"
-import { createLineShape } from "./webgl/shapes/line"
+import { createLineShape, createLineTool } from "./webgl/shapes/line"
 import { createRectShape } from "./webgl/shapes/rect"
 
 export const createPaint = container => {
@@ -12,6 +12,7 @@ export const createPaint = container => {
   const gl = prepareWebgl(canvas)
 
   const brushTool = createBrushTool(gl)
+  const lineTool = createLineTool(gl)
 
   canvas.tabIndex = 0
   canvas.style.outline = 'none'
@@ -41,16 +42,19 @@ export const createPaint = container => {
     gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
 
-    const brushesShape = renderingItemList.filter(item => item.type === PaintTool.Brush)
-    let offset = 0
-    const vertices = []
-    const indices = []
-    for (const { prepare } of brushesShape) {
-      const { count } = prepare(vertices, indices, offset)
-      offset += count
-    }
-    if (indices.length) {
-      brushTool.draw(vertices, indices)
+    const tools = [brushTool, lineTool]
+    for (const tool of tools) {
+      const shapes = renderingItemList.filter(item => item.type === tool.type)
+      let offset = 0
+      const vertices = []
+      const indices = []
+      for (const { prepare } of shapes) {
+        const { count } = prepare(vertices, indices, offset)
+        offset += count
+      }
+      if (indices.length) {
+        tool.draw(vertices, indices)
+      }
     }
 
     for (const { render } of renderingItemList) {

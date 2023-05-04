@@ -30,7 +30,7 @@ export const createBrushTool = gl => {
     gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 28)
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
   }
-  return { draw }
+  return { draw, type: PaintTool.Brush }
 }
 
 export const createBrushShape = (ctx, { x, y }) => {
@@ -57,32 +57,12 @@ export const createBrushShape = (ctx, { x, y }) => {
         const curr = pointList[i]
         const prev = pointList[i - 1] ?? { x: curr.x - (pointList[i + 1].x - curr.x), y: curr.y - (pointList[i + 1].y - curr.y) }
         const next = pointList[i + 1] ?? { x: curr.x - (pointList[i - 1].x - curr.x), y: curr.y - (pointList[i - 1].y - curr.y) }
-        vertices.push(
-          curr.x,
-          curr.y,
-          prev.x,
-          prev.y,
-          next.x,
-          next.y,
-          thickness,
-          ...foregroundColor,
-          curr.x,
-          curr.y,
-          prev.x,
-          prev.y,
-          next.x,
-          next.y,
-          thickness * -1,
-          ...foregroundColor
-        )
+        vertices.push(curr.x, curr.y, prev.x, prev.y, next.x, next.y, thickness, ...foregroundColor)
+        vertices.push(curr.x, curr.y, prev.x, prev.y, next.x, next.y, thickness * -1, ...foregroundColor)
         if (i > 0) {
           indices.push(
-            offset + i * 2 - 2,
-            offset + i * 2 - 1,
-            offset + i * 2,
-            offset + i * 2 - 1,
-            offset + i * 2,
-            offset + i * 2 + 1
+            offset + i * 2 - 2, offset + i * 2 - 1, offset + i * 2,
+            offset + i * 2 - 1, offset + i * 2, offset + i * 2 + 1
           )
         }
         count += 2
