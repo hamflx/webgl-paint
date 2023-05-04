@@ -37,15 +37,17 @@ export const createPaint = container => {
 
   const renderFrame = () => {
     gl.clearColor(0, 0, 0, 0)
-    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+    const itemsWithIndex = renderingItemList.map((item, index) => ({ item, index }))
     for (const tool of tools) {
-      const shapes = renderingItemList.filter(item => item.type === tool.type)
+      const shapes = itemsWithIndex.filter(({ item }) => item.type === tool.type)
       let offset = 0
       const vertices = []
       const indices = []
-      for (const { prepare } of shapes) {
-        const { count } = prepare(vertices, indices, offset)
+      for (const { item, index } of shapes) {
+        const zIndex = 1 - (index + 1) / itemsWithIndex.length
+        const { count } = item.prepare(vertices, indices, offset, zIndex)
         offset += count
       }
       if (indices.length) {
@@ -173,5 +175,7 @@ const createCanvas = container => {
  * @returns {WebGLRenderingContext}
  */
 const prepareWebgl = canvas => {
-  return canvas.getContext('webgl')
+  const gl = canvas.getContext('webgl')
+  gl.enable(gl.DEPTH_TEST)
+  return gl
 }

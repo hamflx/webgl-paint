@@ -11,7 +11,7 @@ export const createRectTool = gl => {
   const verticesBuffer = gl.createBuffer()
   const indicesBuffer = gl.createBuffer()
 
-  const unitSize = 5 + COLOR_SIZE
+  const unitSize = 6 + COLOR_SIZE
   const unitBytes = unitSize * 4
 
   const draw = (vertices, indices) => {
@@ -24,10 +24,10 @@ export const createRectTool = gl => {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 
-    gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, unitBytes, 0)
-    gl.vertexAttribPointer(attrOpposite, 2, gl.FLOAT, false, unitBytes, 8)
-    gl.vertexAttribPointer(attrThickness, 1, gl.FLOAT, false, unitBytes, 16)
-    gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 5 * 4)
+    gl.vertexAttribPointer(attrPos, 3, gl.FLOAT, false, unitBytes, 0)
+    gl.vertexAttribPointer(attrOpposite, 2, gl.FLOAT, false, unitBytes, 12)
+    gl.vertexAttribPointer(attrThickness, 1, gl.FLOAT, false, unitBytes, 20)
+    gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 6 * 4)
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
   }
   return { draw, type: PaintTool.Rectangle }
@@ -45,17 +45,19 @@ export const createRectShape = (ctx, { x1, y1, x2, y2 }) => {
    * @param {Array<number>} vertices
    * @param {Array<number>} indices
    * @param {number} offset
+   * @param {number} zIndex
    */
-    const prepare = (vertices, indices, offset) => {
+    const prepare = (vertices, indices, offset, zIndex) => {
+      console.log(zIndex)
       vertices.push(
-        x1, y1, x2, y2, thickness, ...backgroundColor,
-        x1, y2, x2, y1, thickness, ...backgroundColor,
-        x2, y2, x1, y1, thickness, ...backgroundColor,
-        x2, y1, x1, y2, thickness, ...backgroundColor,
-        x1, y1, x1, y1, 0, ...foregroundColor,
-        x1, y2, x1, y2, 0, ...foregroundColor,
-        x2, y2, x2, y2, 0, ...foregroundColor,
-        x2, y1, x2, y1, 0, ...foregroundColor,
+        x1, y1, zIndex, x2, y2, thickness, ...backgroundColor,
+        x1, y2, zIndex, x2, y1, thickness, ...backgroundColor,
+        x2, y2, zIndex, x1, y1, thickness, ...backgroundColor,
+        x2, y1, zIndex, x1, y2, thickness, ...backgroundColor,
+        x1, y1, zIndex, x1, y1, 0, ...foregroundColor,
+        x1, y2, zIndex, x1, y2, 0, ...foregroundColor,
+        x2, y2, zIndex, x2, y2, 0, ...foregroundColor,
+        x2, y1, zIndex, x2, y1, 0, ...foregroundColor,
       )
       indices.push(
         offset + 4, offset + 5, offset + 6,
@@ -95,7 +97,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
 })
 
 const lineVertexShaderSourceCode = `
-attribute vec2 a_pos;
+attribute vec3 a_pos;
 attribute vec2 a_opposite;
 attribute float a_thickness;
 attribute vec4 a_color;
@@ -104,12 +106,12 @@ varying vec4 v_color;
 void main() {
   v_color = a_color;
 
-  vec2 diff = a_opposite - a_pos;
+  vec2 diff = a_opposite - a_pos.xy;
   vec2 abs_diff = abs(diff);
   vec2 max_thickness = min(abs_diff, a_thickness);
   vec2 dx = sign(diff) * max_thickness;
-  vec2 transform_pos = (a_pos + dx) / u_scale * vec2(2.0, -2.0) + vec2(-1.0, 1.0);
-  gl_Position = vec4(transform_pos, 1, 1);
+  vec2 transform_pos = (a_pos.xy + dx) / u_scale * vec2(2.0, -2.0) + vec2(-1.0, 1.0);
+  gl_Position = vec4(transform_pos, a_pos.z, 1);
 }
 `
 const lineFragShaderSourceCode = `

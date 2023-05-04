@@ -11,7 +11,7 @@ export const createBrushTool = gl => {
   const verticesBuffer = gl.createBuffer()
   const indicesBuffer = gl.createBuffer()
 
-  const unitSize = 7 + COLOR_SIZE
+  const unitSize = 8 + COLOR_SIZE
   const unitBytes = unitSize * 4
 
   const draw = (vertices, indices) => {
@@ -24,11 +24,11 @@ export const createBrushTool = gl => {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 
-    gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, unitBytes, 0)
-    gl.vertexAttribPointer(attrPrevPos, 2, gl.FLOAT, false, unitBytes, 8)
-    gl.vertexAttribPointer(attrNextPos, 2, gl.FLOAT, false, unitBytes, 16)
-    gl.vertexAttribPointer(attrDir, 1, gl.FLOAT, false, unitBytes, 24)
-    gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 28)
+    gl.vertexAttribPointer(attrPos, 3, gl.FLOAT, false, unitBytes, 0)
+    gl.vertexAttribPointer(attrPrevPos, 2, gl.FLOAT, false, unitBytes, 12)
+    gl.vertexAttribPointer(attrNextPos, 2, gl.FLOAT, false, unitBytes, 20)
+    gl.vertexAttribPointer(attrDir, 1, gl.FLOAT, false, unitBytes, 28)
+    gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 32)
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
   }
   return { draw, type: PaintTool.Brush }
@@ -50,16 +50,17 @@ export const createBrushShape = (ctx, { x, y }) => {
    * @param {Array<number>} vertices
    * @param {Array<number>} indices
    * @param {number} offset
+   * @param {number} zIndex
    */
-  const prepare = (vertices, indices, offset) => {
+  const prepare = (vertices, indices, offset, zIndex) => {
     let count = 0
     if (pointList.length >= 2) {
       for (let i = 0; i < pointList.length; i++) {
         const curr = pointList[i]
         const prev = pointList[i - 1] ?? { x: curr.x - (pointList[i + 1].x - curr.x), y: curr.y - (pointList[i + 1].y - curr.y) }
         const next = pointList[i + 1] ?? { x: curr.x - (pointList[i - 1].x - curr.x), y: curr.y - (pointList[i - 1].y - curr.y) }
-        vertices.push(curr.x, curr.y, prev.x, prev.y, next.x, next.y, thickness, ...foregroundColor)
-        vertices.push(curr.x, curr.y, prev.x, prev.y, next.x, next.y, thickness * -1, ...foregroundColor)
+        vertices.push(curr.x, curr.y, zIndex, prev.x, prev.y, next.x, next.y, thickness, ...foregroundColor)
+        vertices.push(curr.x, curr.y, zIndex, prev.x, prev.y, next.x, next.y, thickness * -1, ...foregroundColor)
         if (i > 0) {
           indices.push(
             offset + i * 2 - 2, offset + i * 2 - 1, offset + i * 2,
@@ -103,7 +104,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
 })
 
 const lineVertexShaderSourceCode = `
-attribute vec2 a_pos;
+attribute vec3 a_pos;
 attribute vec2 a_prev_pos;
 attribute vec2 a_next_pos;
 attribute float a_dir;
@@ -118,9 +119,9 @@ vec2 transform_coord2(vec2 coord) {
 void main() {
   v_color = a_color;
 
-  vec2 vec_a = a_pos - a_prev_pos;
+  vec2 vec_a = a_pos.xy - a_prev_pos;
   vec2 unit_a = normalize(vec_a);
-  vec2 vec_b = a_next_pos - a_pos;
+  vec2 vec_b = a_next_pos - a_pos.xy;
   vec2 unit_b = normalize(vec_b);
   float w = a_dir;
   float cos_theta = dot(vec_a, vec_b) / (length(vec_a) * length(vec_b));
@@ -129,9 +130,9 @@ void main() {
   }
   vec2 dir_unit = normalize((unit_a + unit_b) * mat2(0, -1, 1, 0));
   vec2 norm = dir_unit * w / 2.0;
-  vec2 final_pos = a_pos + norm;
+  vec2 final_pos = a_pos.xy + norm;
   vec2 transform_pos = transform_coord2(final_pos);
-  gl_Position = vec4(transform_pos.xy, 1, 1);
+  gl_Position = vec4(transform_pos.xy, a_pos.z, 1);
 }
 `
 const lineFragShaderSourceCode = `

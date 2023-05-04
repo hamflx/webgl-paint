@@ -11,7 +11,7 @@ export const createLineTool = gl => {
   const verticesBuffer = gl.createBuffer()
   const indicesBuffer = gl.createBuffer()
 
-  const unitSize = 5 + COLOR_SIZE
+  const unitSize = 6 + COLOR_SIZE
   const unitBytes = unitSize * 4
 
   const draw = (vertices, indices) => {
@@ -24,10 +24,10 @@ export const createLineTool = gl => {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 
-    gl.vertexAttribPointer(attrPos, 2, gl.FLOAT, false, unitBytes, 0)
-    gl.vertexAttribPointer(attrNextPos, 2, gl.FLOAT, false, unitBytes, 8)
-    gl.vertexAttribPointer(attrDir, 1, gl.FLOAT, false, unitBytes, 16)
-    gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 20)
+    gl.vertexAttribPointer(attrPos, 3, gl.FLOAT, false, unitBytes, 0)
+    gl.vertexAttribPointer(attrNextPos, 2, gl.FLOAT, false, unitBytes, 12)
+    gl.vertexAttribPointer(attrDir, 1, gl.FLOAT, false, unitBytes, 20)
+    gl.vertexAttribPointer(attrColor, 3, gl.FLOAT, false, unitBytes, 24)
     gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
   }
   return { draw, type: PaintTool.Line }
@@ -45,13 +45,14 @@ export const createLineShape = (ctx, { x1, y1, x2, y2 }) => {
    * @param {Array<number>} vertices
    * @param {Array<number>} indices
    * @param {number} offset
+   * @param {number} zIndex
    */
-  const prepare = (vertices, indices, offset) => {
+  const prepare = (vertices, indices, offset, zIndex) => {
     vertices.push(
-      x1, y1, x2, y2, thickness, ...foregroundColor,
-      x1, y1, x2, y2, -thickness, ...foregroundColor,
-      x2, y2, x1, y1, thickness, ...foregroundColor,
-      x2, y2, x1, y1, -thickness, ...foregroundColor
+      x1, y1, zIndex, x2, y2, thickness, ...foregroundColor,
+      x1, y1, zIndex, x2, y2, -thickness, ...foregroundColor,
+      x2, y2, zIndex, x1, y1, thickness, ...foregroundColor,
+      x2, y2, zIndex, x1, y1, -thickness, ...foregroundColor
     )
     indices.push(
       offset, offset + 1, offset + 2,
@@ -89,7 +90,7 @@ const getProgram = initializeOnce((/** @type {WebGLRenderingContext} */ gl) => {
 })
 
 const lineVertexShaderSourceCode = `
-attribute vec2 a_pos;
+attribute vec3 a_pos;
 attribute vec2 a_next_pos;
 attribute float a_dir;
 attribute vec4 a_color;
@@ -98,13 +99,13 @@ varying vec4 v_color;
 void main() {
   v_color = a_color;
 
-  vec2 dir = a_next_pos - a_pos;
+  vec2 dir = a_next_pos - a_pos.xy;
   float len = sqrt(dir.x * dir.x + dir.y * dir.y);
   vec2 dir_unit = dir / len;
   vec2 norm = vec2(-dir_unit.y, dir_unit.x) * vec2(a_dir, a_dir) / 2.0;
-  vec2 final_pos = a_pos + norm;
-  vec2 transform_pos = (a_pos + norm) / u_scale * vec2(2.0, -2.0) + vec2(-1.0, 1.0);
-  gl_Position = vec4(transform_pos.xy, 1, 1);
+  vec2 final_pos = a_pos.xy + norm;
+  vec2 transform_pos = (a_pos.xy + norm) / u_scale * vec2(2.0, -2.0) + vec2(-1.0, 1.0);
+  gl_Position = vec4(transform_pos.xy, a_pos.z, 1);
 }
 `
 const lineFragShaderSourceCode = `
